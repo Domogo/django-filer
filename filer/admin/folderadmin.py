@@ -8,6 +8,8 @@ import re
 import zipfile
 import time
 
+from compiler.ast import flatten
+
 from django import forms
 from django.conf import settings as django_settings
 from django.conf.urls import url
@@ -1281,18 +1283,13 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
 
     resize_images.short_description = ugettext_lazy("Resize selected images")
 
-    def _list_folders_to_download(self, request, folders):
+    def _list_files_to_download(self, request, folders):
         for fo in folders:
-            yield self._format_callback(fo, request.user, self.admin_site, set())
-            children = list(self._list_folders_to_download(request, fo.children.all()))
-            children.extend([self._format_callback(f, request.user, self.admin_site, set()) for f in sorted(fo.files)])
+            # yield self._format_dl(fo)
+            children = list(self._list_files_to_download(request, fo.children.all()))
+            children.extend([self._format_dl(f) for f in sorted(fo.files)])
             if children:
                 yield children
-
-    def _list_all_to_download(self, request, files_queryset, folders_queryset):
-        to_dl = list(self._list_folders_to_download(request, folders_queryset))
-        to_dl.extend([self._format_callback(f, request.user, self.admin_site, set()) for f in sorted(files_queryset)])
-        return to_dl
 
     def download_files(self, request, files_queryset, folders_queryset):
         """
@@ -1300,52 +1297,23 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
             1. Downloading inside of a single directory.
             2. Downloading directories and all their children
         """
-        to_download = self._list_all_to_download(request, files_queryset, folders_queryset)
-        fp = '/home/domogo/web_riteh/py/riteh/media/'
-        fr_child = False
+        to_download = self._list_files_to_download(request, folders_queryset)
+        names = flatten(to_download)
+        current_dir = ''
+        self.path = ''
+        # fp = '/home/domogo/web_riteh/py/riteh/media/'
+        fp = FILER_BULK_DOWNLOAD_PATH
         zip_written = False
         with zipfile.ZipFile('myzip.zip', 'w') as myzip:
-            for n in to_download:
-                if type(n) is not list: 
-                    n = n.split(': ')[1].split()[1].split('>')[1].split('<')[0]
-                try:
-                    """
-                        get a directory and set flag to know that the files afterwards
-                        are children of this directory
-                    """
-                    fr = Folder.objects.get(name=n)
-                    fr_child = True
-                    continue
-                except:
-                    pass
-                
-                if fr_child:
-                    # Case 2.
-                    for nn in n:
-                        """
-                           try/except wrappers in case files inside are corrupt.
-                           Example: Deleted files still show up on the listing.
-                           (if they are deleted manually on the server and not through filer
-                           they still remain listen in the db.)
-                        """
-                        try:
-                            # try to get the files inside dir, if fails to catch - pass
-                            nn = nn.split(': ')[1].split()[1].split('>')[1].split('<')[0]
-                            f = File.objects.filter(original_filename=nn).latest('id')
-                            myzip.write(fp + str(f.file), fr.name + '/' + f.original_filename)
-                            zip_written = True
-                        except:
-                            pass
-                    fr_child = False
-                else:
-                    # Case 1.
-                    try:
-                        # get selected files, if fails - pass
-                        f = File.objects.filter(original_filename=n).latest('id')
-                        myzip.write(fp + str(f.file), f.original_filename)
-                        zip_written = True
-                    except:
-                        pass
+            for name in names:
+                file = File.objects.filter(original_filename=name).latest('id')
+                folder = Folder.objects.get(id=file.folder_id)
+                if current_dir != folder.name:
+                    current_dir = folder.name
+                    self.path = ''
+                    self.get_path(folder)
+                myzip.write(fp + str(file.file), self.path + str(file.original_filename))
+                zip_written = True
         myzip.close()
 
         if zip_written:
@@ -1356,5 +1324,30 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
             return response
         else:
             return HttpResponse('Directories are empty. No Files to download')
+
+
+        """
+        zip_written = False
+            for n in flatten(to_download):
+                try:
+                    f = File.objects.filter(original_filename=n).latest('id')
+                    myzip.write(fp + str(f.file), f.original_filename)
+                    zip_written = True
+                except:
+                    pass
+        myzip.close()
+
+        """
+
+    def _format_dl(self, obj):
+        return '%s' % force_text(obj)
+
+    def get_path(self, folder):
+        self.path = folder.name + '/' + self.path
+        if folder.parent_id:
+            folder = Folder.objects.get(id=folder.parent_id)
+            self.get_path(folder)
+        else:
+            return
 
     download_files.short_description = ugettext_lazy("Download selected files")
