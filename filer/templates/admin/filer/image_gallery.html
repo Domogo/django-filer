@@ -1,0 +1,73 @@
+{% extends "admin/filer/base_site.html" %}
+{% load i18n staticfiles %}
+
+{% block content %}
+
+{% if images %}
+    {% for image in images %}
+    <section class="image-info image-info-detail">
+        <p>{{ image }}</p>
+        <div class="image-details-left">
+            <div class="image-preview-container">
+                {% if image.thumbnails %}
+                    <div class="image-preview js-focal-point" data-location-selector="#id_subject_location">
+                        <img src="{{ image.thumbnails.admin_sidebar_preview }}" data-ratio="{{ adminform.form.sidebar_image_ratio }}" class="js-focal-point-image">
+                        <div class="image-preview-field">
+                            <div class="js-focal-point-circle image-preview-circle hidden"></div>
+                        </div>
+                    </div>
+                {% else %}
+                    <img src="{% if original.icons.48 %}{{ original.icons.48 }}{% else %}{% static 'filer/icons/missingfile_48x48.png' %}{% endif %}">
+                {% endif %}
+                <div class="text-left">
+                    <a href="{{ image.url }}" target="_blank" class="btn">
+                        {% if image %}
+                            {% trans "Open file" %}
+                        {% else %}
+                            {% trans "Full size preview" %}
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="image-details-right">
+            {% if image.file_type or image.modified_at or image.uploaded_at or image.width or image.height or image.size %}
+                <dl class="image-details">
+                    {% if image.file_type %}
+                        <dt>{% trans "Type" %}</dt>
+                        <dd>{{ image.extension|upper }} {{ image.file_type }}</dd>
+                    {% endif %}
+                    {% if image.width or image.height %}
+                        <dt>{% trans "Size" %}</dt>
+                        <dd>{{ image.width }}x{{ image.height }} px</dd>
+                    {% endif %}
+                    {% if image.size %}
+                        <dt>{% trans "File-size" %}</dt>
+                        <dd>{{ image.size|filesizeformat }}</dd>
+                    {% endif %}
+                    {% if image.modified_at %}
+                        <dt>{% trans "Modified" %}</dt>
+                        <dd>{{ image.modified_at }}</dd>
+                    {% endif %}
+                    {% if image.uploaded_at %}
+                        <dt>{% trans "Created" %}</dt>
+                        <dd>{{ image.uploaded_at }}</dd>
+                    {% endif %}
+                </dl>
+                <div class="image-actions">
+                    <ul class="actions-list">
+                        <li>
+                            <span class="icon fa fa-user"></span>
+                            {% if image.owner %}
+                                <span class="text">{% trans "Owner" %}: <strong>{{ image.owner }}</strong></span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+    {% endfor %}
+{% endif %}
+
+{% endblock %}

@@ -14,7 +14,7 @@ from .utils.recursive_dictionary import RecursiveDictionaryWithExcludes
 logger = logging.getLogger(__name__)
 
 FILER_IMAGE_MODEL = getattr(settings, 'FILER_IMAGE_MODEL', False)
-FILER_DEBUG = getattr(settings, 'FILER_DEBUG', False)  # When True makes
+FILER_DEBUG = getattr(settings, 'FILER_DEBUG', True)  # When True makes
 FILER_SUBJECT_LOCATION_IMAGE_DEBUG = getattr(settings, 'FILER_SUBJECT_LOCATION_IMAGE_DEBUG', False)
 FILER_WHITESPACE_COLOR = getattr(settings, 'FILER_WHITESPACE_COLOR', '#FFFFFF')
 

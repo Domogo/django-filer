@@ -1,4 +1,4 @@
-{% extends "admin/filer/base_site.html" %}
+  {% extends "admin/filer/base_site.html" %}
 {% load i18n staticfiles filer_admin_tags %}
 
 {% block extrahead %}
@@ -152,6 +152,9 @@
                         {% endif %}
                         <div class="empty-filer-header-cell"></div>
                     </div>
+                    
+                    
+                    
                     <form class="filter-files-container js-filter-files-container" action="." method="get" class="js-filer-search-form">
                         <div class="filter-filers-container-inner">
                             <button class="navigator-button filter-files-button" title="{% trans 'Click here to run search for entered phrase' %}"><span class="icon fa fa-search"></span></button>
@@ -208,6 +211,11 @@
                             </div>
                         {% endif %}
                         {% block object-tools-items %}
+                            <div  class="navigator-button-wrapper">
+                                <a href="" class="navigator-button">
+                                    {% trans "Image Gallery" %}
+                                </a>
+                            </div>
                             <div class="navigator-button-wrapper">
                                 {% if folder.can_have_subfolders and can_make_folder %}
                                     <a href="{% url 'admin:filer-directory_listing-make_root_folder' %}?parent_id={{ folder.id }}{% if is_popup %}&amp;_popup=1{% endif %}"

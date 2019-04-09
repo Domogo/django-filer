@@ -40,7 +40,7 @@ from ..models import (
     UnsortedImages,
     tools,
 )
-from ..settings import FILER_PAGINATE_BY
+from ..settings import FILER_PAGINATE_BY, FILER_BULK_DOWNLOAD_PATH
 from ..thumbnail_processors import normalize_subject_location
 from ..utils.compatibility import (
     capfirst,
@@ -252,6 +252,10 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
                 self.admin_site.admin_view(self.directory_listing),
                 {'viewtype': 'unfiled_images'},
                 name='filer-directory_listing-unfiled_images'),
+
+            url(r'^image_gallery/$',
+                self.admin_site.admin_view(self.image_gallery),
+                name='image_gallery'),
         ] + super(FolderAdmin, self).get_urls()
 
     # custom views
@@ -1301,19 +1305,22 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
         names = flatten(to_download)
         current_dir = ''
         self.path = ''
-        # fp = '/home/domogo/web_riteh/py/riteh/media/'
         fp = FILER_BULK_DOWNLOAD_PATH
         zip_written = False
         with zipfile.ZipFile('myzip.zip', 'w') as myzip:
             for name in names:
-                file = File.objects.filter(original_filename=name).latest('id')
-                folder = Folder.objects.get(id=file.folder_id)
-                if current_dir != folder.name:
-                    current_dir = folder.name
-                    self.path = ''
-                    self.get_path(folder)
-                myzip.write(fp + str(file.file), self.path + str(file.original_filename))
-                zip_written = True
+                try:
+                    file = File.objects.filter(original_filename=name).latest('id')
+                    folder = Folder.objects.get(id=file.folder_id)
+                    if current_dir != folder.name:
+                        current_dir = folder.name
+                        self.path = ''
+                        self.get_path(folder)
+                    myzip.write(fp + str(file.file), self.path + str(file.original_filename))
+                    zip_written = True
+                except:
+                    zip_written = False
+                    pass
         myzip.close()
 
         if zip_written:
@@ -1324,20 +1331,6 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
             return response
         else:
             return HttpResponse('Directories are empty. No Files to download')
-
-
-        """
-        zip_written = False
-            for n in flatten(to_download):
-                try:
-                    f = File.objects.filter(original_filename=n).latest('id')
-                    myzip.write(fp + str(f.file), f.original_filename)
-                    zip_written = True
-                except:
-                    pass
-        myzip.close()
-
-        """
 
     def _format_dl(self, obj):
         return '%s' % force_text(obj)
@@ -1351,3 +1344,10 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
             return
 
     download_files.short_description = ugettext_lazy("Download selected files")
+
+    def image_gallery(self, request):
+        images = Image.objects.all().order_by('-id')
+        context = {}
+        context['images'] = images
+        return render(request, 'admin/filer/image_gallery.html', context=context)
+
