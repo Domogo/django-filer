@@ -18,6 +18,7 @@ from django.contrib.admin import helpers
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator
 from django.db import models, router
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
@@ -1320,7 +1321,7 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
                     zip_written = True
                 except:
                     zip_written = False
-                    pass
+                    pass  # makni
         myzip.close()
 
         if zip_written:
@@ -1328,6 +1329,7 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
             zip_file = open('myzip.zip', 'r')
             response = HttpResponse(zip_file, content_type='application/force-download')
             response['Content-Disposition'] = 'attachment; filename="%s"' %  filename
+            os.remove('myzip.zip')
             return response
         else:
             return HttpResponse('Directories are empty. No Files to download')
@@ -1346,8 +1348,17 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
     download_files.short_description = ugettext_lazy("Download selected files")
 
     def image_gallery(self, request):
-        images = Image.objects.all().order_by('-id')
+        images_list = Image.objects.all().order_by('-id')
+        paginator = Paginator(images_list, 20)
+        page = request.GET.get('page')
+        try:
+            images = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            images = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            images = paginator.page(paginator.num_pages)
         context = {}
         context['images'] = images
         return render(request, 'admin/filer/image_gallery.html', context=context)
-

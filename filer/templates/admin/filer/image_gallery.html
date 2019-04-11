@@ -2,16 +2,110 @@
 {% load i18n staticfiles %}
 
 {% block content %}
+<style>
 
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
+}
+
+/* Modal Content (Image) */
+.modal-content {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+}
+
+/* Caption of Modal Image (Image Text) - Same Width as the Image */
+#caption {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+  text-align: center;
+  color: #ccc;
+  padding: 10px 0;
+  height: 150px;
+}
+
+/* Add Animation - Zoom in the Modal */
+.modal-content, #caption { 
+  animation-name: zoom;
+  animation-duration: 0.6s;
+}
+
+@keyframes zoom {
+  from {transform:scale(0)} 
+  to {transform:scale(1)}
+}
+
+.next {
+  position: absolute;
+  top: 15%;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.prev {
+  position: absolute;
+  top: 20%;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+/* The Close Button */
+.close {
+  position: absolute;
+  top: 10%;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.close:hover,
+.close:focus,
+.next:hover,
+.next:focus,
+.prev:hover,
+.prev:focus {
+  color: #bbb;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+
+</style>
+
+
+<div class="gallery" style="margin-top:2%">
 {% if images %}
     {% for image in images %}
-    <section class="image-info image-info-detail">
+    <div class="image-info image-info-detail" style="display:inline-block; width:40%; margin-left: 5%;">
         <p>{{ image }}</p>
         <div class="image-details-left">
-            <div class="image-preview-container">
+            <div class="image-preview-container" onclick="openImage('{{ image.id }}')">
                 {% if image.thumbnails %}
                     <div class="image-preview js-focal-point" data-location-selector="#id_subject_location">
-                        <img src="{{ image.thumbnails.admin_sidebar_preview }}" data-ratio="{{ adminform.form.sidebar_image_ratio }}" class="js-focal-point-image">
+                        <img src="{{ image.url }}" data-ratio="{{ adminform.form.sidebar_image_ratio }}" class="js-focal-point-image" id="{{ image.id }}" style="object-fit:cover; max-height:130px;" alt="{{ image }}">
                         <div class="image-preview-field">
                             <div class="js-focal-point-circle image-preview-circle hidden"></div>
                         </div>
@@ -20,12 +114,8 @@
                     <img src="{% if original.icons.48 %}{{ original.icons.48 }}{% else %}{% static 'filer/icons/missingfile_48x48.png' %}{% endif %}">
                 {% endif %}
                 <div class="text-left">
-                    <a href="{{ image.url }}" target="_blank" class="btn">
-                        {% if image %}
-                            {% trans "Open file" %}
-                        {% else %}
-                            {% trans "Full size preview" %}
-                        {% endif %}
+                    <a href="{{ image.url }}" class="btn">
+                        {% trans "Full size preview" %}
                     </a>
                 </div>
             </div>
@@ -66,8 +156,77 @@
                 </div>
             {% endif %}
         </div>
-    </section>
+    </div>
     {% endfor %}
+</div>
+    <div class="pagination">
+        <span class="step-links">
+            {% if images.has_previous %}
+                <a href="?page={{ images.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ images.number }} of {{ images.paginator.num_pages }}.
+            </span>
+
+            {% if images.has_next %}
+                <a href="?page={{ images.next_page_number }}">next</a>
+            {% endif %}
+        </span>
+    </div>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+  <!-- The Close Button -->
+  <span class="close">&times;</span>
+
+  <!-- The Next Button -->
+  <span class="next">next</span>
+
+  <!-- The Prev Button -->
+  <span class="prev">prev</span>
+
+  <!-- Modal Content (The Image) -->
+  <img class="modal-content" id="img01">
+
+  <!-- Modal Caption (Image Text) -->
+  <div id="caption"></div>
+</div>
+
 {% endif %}
+
+
+<script>
+
+function openImage(image_id){
+    // Get the modal
+    var modal = document.getElementById('myModal');
+    modal.style.display="none";
+    // Get the image and insert it inside the modal - use its "alt" text as a caption
+    console.log(image_id);
+    img = document.getElementById(image_id);
+    console.log(img);
+    var modalImg = document.getElementById("img01");
+    var captionText = document.getElementById("caption");
+    modal.style.display = "block";
+    modalImg.src = img.src;
+    captionText.innerHTML = img.alt;
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+    var nextbtn = document.getElementsByClassName("next")[0];
+
+    nextbtn.onclick = function() {
+        image_id++;
+        openImage(image_id);
+    };
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() { 
+      modal.style.display = "none";
+    };
+}
+
+</script>
 
 {% endblock %}
