@@ -1321,7 +1321,6 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
                     zip_written = True
                 except:
                     zip_written = False
-                    pass  # makni
         myzip.close()
 
         if zip_written:

@@ -50,25 +50,6 @@
   to {transform:scale(1)}
 }
 
-.next {
-  position: absolute;
-  top: 15%;
-  right: 35px;
-  color: #f1f1f1;
-  font-size: 40px;
-  font-weight: bold;
-  transition: 0.3s;
-}
-
-.prev {
-  position: absolute;
-  top: 20%;
-  right: 35px;
-  color: #f1f1f1;
-  font-size: 40px;
-  font-weight: bold;
-  transition: 0.3s;
-}
 
 /* The Close Button */
 .close {
@@ -82,16 +63,41 @@
 }
 
 .close:hover,
-.close:focus,
-.next:hover,
-.next:focus,
-.prev:hover,
-.prev:focus {
+.close:focus {
   color: #bbb;
   text-decoration: none;
   cursor: pointer;
 }
 
+/* Next & previous buttons */
+.prev,
+.next {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  width: auto;
+  padding: 16px;
+  margin-top: -50px;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  transition: 0.6s ease;
+  border-radius: 0 3px 3px 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Position the "next button" to the right */
+.next {
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+/* On hover, add a black background color with a little bit see-through */
+.prev:hover,
+.next:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
 
 </style>
 
@@ -102,7 +108,7 @@
     <div class="image-info image-info-detail" style="display:inline-block; width:40%; margin-left: 5%;">
         <p>{{ image }}</p>
         <div class="image-details-left">
-            <div class="image-preview-container" onclick="openImage('{{ image.id }}')">
+            <div class="image-preview-container" onclick="openImage('{{ image.id }}');">
                 {% if image.thumbnails %}
                     <div class="image-preview js-focal-point" data-location-selector="#id_subject_location">
                         <img src="{{ image.url }}" data-ratio="{{ adminform.form.sidebar_image_ratio }}" class="js-focal-point-image" id="{{ image.id }}" style="object-fit:cover; max-height:130px;" alt="{{ image }}">
@@ -181,11 +187,9 @@
   <!-- The Close Button -->
   <span class="close">&times;</span>
 
-  <!-- The Next Button -->
-  <span class="next">next</span>
-
-  <!-- The Prev Button -->
-  <span class="prev">prev</span>
+  <!-- Next/previous controls -->
+    <a class="prev" onclick="plusSlides(1)">&#10094;</a>
+    <a class="next" onclick="plusSlides(-1)">&#10095;</a>
 
   <!-- Modal Content (The Image) -->
   <img class="modal-content" id="img01">
@@ -199,14 +203,21 @@
 
 <script>
 
-function openImage(image_id){
+var g_image_id = 0;
+
+function plusSlides(n) {
+  openImage(parseInt(g_image_id) + n);
+}
+
+function openImage(image_id) {
     // Get the modal
+    g_image_id = image_id;
+    console.log(image_id);
+    console.log('asd' + g_image_id);
     var modal = document.getElementById('myModal');
     modal.style.display="none";
     // Get the image and insert it inside the modal - use its "alt" text as a caption
-    console.log(image_id);
-    img = document.getElementById(image_id);
-    console.log(img);
+    img = document.getElementById(image_id.toString());
     var modalImg = document.getElementById("img01");
     var captionText = document.getElementById("caption");
     modal.style.display = "block";
@@ -215,12 +226,6 @@ function openImage(image_id){
 
     // Get the <span> element that closes the modal
     var span = document.getElementsByClassName("close")[0];
-    var nextbtn = document.getElementsByClassName("next")[0];
-
-    nextbtn.onclick = function() {
-        image_id++;
-        openImage(image_id);
-    };
     // When the user clicks on <span> (x), close the modal
     span.onclick = function() { 
       modal.style.display = "none";
