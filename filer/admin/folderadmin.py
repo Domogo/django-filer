@@ -1309,8 +1309,8 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
         fp = FILER_BULK_DOWNLOAD_PATH
         zip_written = False
         with zipfile.ZipFile('myzip.zip', 'w') as myzip:
-            for name in names:
-                try:
+            try:
+                for name in names:
                     file = File.objects.filter(original_filename=name).latest('id')
                     folder = Folder.objects.get(id=file.folder_id)
                     if current_dir != folder.name:
@@ -1319,8 +1319,13 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
                         self.get_path(folder)
                     myzip.write(fp + str(file.file), self.path + str(file.original_filename))
                     zip_written = True
-                except:
-                    zip_written = False
+            except:
+                zip_written = False
+            else:
+                for name in files_queryset:
+                    file = File.objects.filter(original_filename=name).latest('id')
+                    myzip.write(fp + str(file.file), str(file.original_filename))
+                    zip_written = True
         myzip.close()
 
         if zip_written:
