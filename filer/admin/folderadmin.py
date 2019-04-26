@@ -1302,7 +1302,13 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
             1. Downloading inside of a single directory.
             2. Downloading directories and all their children
         """
+        just_files = False
+        to_download = None
+        
         to_download = self._list_files_to_download(request, folders_queryset)
+        if len(list(to_download)) < 1:
+            to_download = files_queryset
+            just_files = True
         names = flatten(to_download)
         current_dir = ''
         self.path = ''
@@ -1313,11 +1319,14 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
                 try:
                     file = File.objects.filter(original_filename=name).latest('id')
                     folder = Folder.objects.get(id=file.folder_id)
-                    if current_dir != folder.name:
+                    if current_dir != folder.name and not just_files:
                         current_dir = folder.name
                         self.path = ''
                         self.get_path(folder)
-                    myzip.write(fp + str(file.file), self.path + str(file.original_filename))
+                    if not just_files:
+                        myzip.write(fp + str(file.file), self.path + str(file.original_filename))
+                    else:
+                        myzip.write(fp + str(file.file), str(file.original_filename))
                     zip_written = True
                 except:
                     zip_written = False

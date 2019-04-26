@@ -119,11 +119,6 @@
                 {% else %}
                     <img src="{% if original.icons.48 %}{{ original.icons.48 }}{% else %}{% static 'filer/icons/missingfile_48x48.png' %}{% endif %}">
                 {% endif %}
-                <div class="text-left">
-                    <a href="{{ image.url }}" class="btn">
-                        {% trans "Full size preview" %}
-                    </a>
-                </div>
             </div>
         </div>
         <div class="image-details-right">

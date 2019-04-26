@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 FILER_IMAGE_MODEL = getattr(settings, 'FILER_IMAGE_MODEL', False)
 FILER_DEBUG = getattr(settings, 'FILER_DEBUG', True)  # When True makes
-FILER_SUBJECT_LOCATION_IMAGE_DEBUG = getattr(settings, 'FILER_SUBJECT_LOCATION_IMAGE_DEBUG', False)
+FILER_SUBJECT_LOCATION_IMAGE_DEBUG = getattr(settings, 'FILER_SUBJECT_LOCATION_IMAGE_DEBUG', True)
 FILER_WHITESPACE_COLOR = getattr(settings, 'FILER_WHITESPACE_COLOR', '#FFFFFF')
 
 FILER_0_8_COMPATIBILITY_MODE = getattr(settings, 'FILER_0_8_COMPATIBILITY_MODE', False)
