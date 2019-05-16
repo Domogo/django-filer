@@ -7,6 +7,7 @@ import os
 import re
 import zipfile
 import time
+import uuid
 
 from compiler.ast import flatten
 
@@ -1290,7 +1291,6 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
 
     def _list_files_to_download(self, request, folders):
         for fo in folders:
-            # yield self._format_dl(fo)
             children = list(self._list_files_to_download(request, fo.children.all()))
             children.extend([self._format_dl(f) for f in sorted(fo.files)])
             if children:
@@ -1308,7 +1308,8 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
         self.path = ''
         fp = FILER_BULK_DOWNLOAD_PATH
         zip_written = False
-        with zipfile.ZipFile('myzip.zip', 'w') as myzip:
+        zipname = str(uuid.uuid4().hex.upper()[0:8]) + '.zip'
+        with zipfile.ZipFile(zipname, 'w') as myzip:
             try:
                 for name in names:
                     file = File.objects.filter(original_filename=name).latest('id')
@@ -1329,11 +1330,10 @@ class FolderAdmin(PrimitivePermissionAwareModelAdmin):
         myzip.close()
 
         if zip_written:
-            filename = str(time.time()).split('.')[0] + '.zip'
-            zip_file = open('myzip.zip', 'r')
+            zip_file = open(zipname, 'r')
             response = HttpResponse(zip_file, content_type='application/force-download')
-            response['Content-Disposition'] = 'attachment; filename="%s"' %  filename
-            os.remove('myzip.zip')
+            response['Content-Disposition'] = 'attachment; filename="%s"' %  zipname
+            os.remove(zipname)
             return response
         else:
             return HttpResponse('Directories are empty. No Files to download')
